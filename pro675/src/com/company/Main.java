@@ -1,13 +1,15 @@
 package com.company;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.PriorityQueue;
+import java.util.*;
 
 public class Main {
+    //tips to prevent time limited error
+    //1. For BFS algorithm, there are two implementation. The first one is to recursively call some function. The second one is to use Queue. The second one is faster.
+    //Focus about how to record level information
+    //2. Here I create Element class. It is better to use int[] array than to create a new class.
 
+    static int[][] dirs = {{0,1}, {0, -1}, {1, 0}, {-1, 0}};
     public static void main(String[] args) {
-	// write your code here
         List<List<Integer>> forest = new ArrayList<>();
 
         List<Integer> l0 = new ArrayList();
@@ -58,6 +60,10 @@ public class Main {
         PriorityQueue<Element> minHeap = new PriorityQueue<>((a, b)->(a.height-b.height));
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
+                //This one is wrong
+//                if (i == 0 || j == 0) {
+//                    continue;
+//                }
                 int h = forest.get(i).get(j);
                 if (h == 0 || h == 1) {
                     continue;
@@ -71,16 +77,13 @@ public class Main {
         int curRow = 0;
         int curCol = 0;
         int res = 0;
-        boolean[][] visited = new boolean[m][n];
+
         while (!minHeap.isEmpty()) {
             Element target = minHeap.poll();
-            visited[curRow][curCol] = true;
-            int steps = isReachable(visited, 0, curRow, curCol, target.row, target.col, forest);
-            visited[curRow][curCol] = false;
+            int steps = isReachable(m, n, curRow, curCol, target.row, target.col, forest);
             if (steps == -1) {
                 return -1;
             } else {
-                forest.get(target.row).set(target.col, 1);
                 curRow = target.row;
                 curCol = target.col;
                 res += steps;
@@ -89,76 +92,33 @@ public class Main {
         return res;
     }
 
+    static int isReachable(int m, int n, int curRow, int curCol, int targetRow, int targetCol, List<List<Integer>> forest) {
+        boolean[][] visited = new boolean[m][n];
+        visited[curRow][curCol] = true;
+        Queue<int[]> queue = new LinkedList();
+        queue.add(new int[]{curRow, curCol});
 
-    static int isReachable(boolean[][] visited, int steps, int curRow, int curCol, int targetRow, int targetCol, List<List<Integer>> forest) {
-        if (curRow == targetRow && curCol == targetCol) {
-            return steps;
-        }
         int row;
         int col;
-
-        //go left
-        row = curRow;
-        col = curCol-1;
-
-        int res = Integer.MAX_VALUE;
-        if (col >= 0) {
-            if (!visited[row][col]  && 0 != forest.get(row).get(col)) {
-                visited[row][col] = true;
-                int val = isReachable(visited, 1+steps, row, col, targetRow, targetCol,forest);
-                visited[row][col] = false;
-                if (val != -1) {
-                    res = Math.min(res, val);
+        int level = 0;
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                int[] temp = queue.poll();
+                if (temp[0] == targetRow && temp[1] == targetCol) {
+                    return level;
+                }
+                for (int[] dir : dirs) {
+                    row = temp[0] + dir[0];
+                    col = temp[1] + dir[1];
+                    if (row >= 0 && row < m && col >= 0 && col < n && !visited[row][col] && forest.get(row).get(col) != 0) {
+                        visited[row][col] = true;
+                        queue.add(new int[] {row, col});
+                    }
                 }
             }
+            level++;
         }
-
-        //go right
-        row = curRow;
-        col = curCol+1;
-        if (col < forest.get(0).size()) {
-            if (!visited[row][col]  && 0 != forest.get(row).get(col)) {
-                visited[row][col] = true;
-                int val = isReachable(visited, 1+steps, row, col, targetRow, targetCol,forest);
-                visited[row][col] = false;
-                if (val != -1) {
-                    res = Math.min(res, val);
-                }
-            }
-        }
-
-        //go up
-        row = curRow-1;
-        col = curCol;
-        if (row >= 0) {
-            if (!visited[row][col]  && 0 != forest.get(row).get(col)) {
-                visited[row][col] = true;
-                int val = isReachable(visited, 1+steps, row, col, targetRow, targetCol,forest);
-                visited[row][col] = false;
-                if (val != -1) {
-                    res = Math.min(res, val);
-                }
-            }
-        }
-
-        //go down
-        row = curRow+1;
-        col = curCol;
-        if (row < forest.size()) {
-            if (!visited[row][col]  && 0 != forest.get(row).get(col)) {
-                visited[row][col] = true;
-                int val = isReachable(visited, 1+steps, row, col, targetRow, targetCol,forest);
-                visited[row][col] = false;
-                if (val != -1) {
-                    res = Math.min(res, val);
-                }
-            }
-        }
-
-        if (res == Integer.MAX_VALUE) {
-            return -1;
-        } else {
-            return res;
-        }
+        return -1;
     }
 }
