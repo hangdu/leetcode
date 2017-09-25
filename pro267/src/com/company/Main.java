@@ -92,15 +92,20 @@ public class Main {
             return;
         }
 
-        Set<Character> set = new HashSet();
+        boolean isFirstTime = true;
+        char temp = '0';
         for (int i = 0; i < base.length(); i++) {
             if (visited[i]) {
                 continue;
             }
-            if (set.contains(base.charAt(i))) {
+            if (!isFirstTime && base.charAt(i) == temp) {
                 continue;
             }
-            set.add(base.charAt(i));
+
+            if (isFirstTime) {
+                isFirstTime = false;
+            }
+            temp = base.charAt(i);
             visited[i] = true;
             list.add(base.charAt(i));
             helper(base, res, visited, list, c, oddExist);
